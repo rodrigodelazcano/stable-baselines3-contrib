@@ -2,6 +2,7 @@ from typing import Dict, Optional, Union
 
 import gym
 import numpy as np
+from copy import deepcopy
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
 
 
@@ -45,12 +46,13 @@ class TimeFeatureWrapper(gym.Wrapper):
         low, high = np.concatenate((low, [0.0])), np.concatenate((high, [1.0]))
         self.dtype = obs_space.dtype
 
-        if isinstance(env.observation_space, gym.spaces.Dict):
-            env.observation_space.spaces["observation"] = gym.spaces.Box(low=low, high=high, dtype=self.dtype)
-        else:
-            env.observation_space = gym.spaces.Box(low=low, high=high, dtype=self.dtype)
-
         super().__init__(env)
+
+        if isinstance(env.observation_space, gym.spaces.Dict):
+            self.observation_space = deepcopy(env.observation_space)
+            self.observation_space["observation"] = gym.spaces.Box(low=low, high=high, dtype=self.dtype)
+        else:
+            self.observation_space = gym.spaces.Box(low=low, high=high, dtype=self.dtype)
 
         # Try to infer the max number of steps per episode
         try:
